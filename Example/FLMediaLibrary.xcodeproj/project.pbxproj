@@ -24,6 +24,7 @@
 		71719F9F1E33DC2100824A3D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */; };
 		873B8AEB1B1F5CCA007FD442 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 873B8AEA1B1F5CCA007FD442 /* Main.storyboard */; };
 		A262B3CD9FC1352CD2EE938E /* Pods_FLMediaLibrary_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43A23ECA909BF8D3E3BA1493 /* Pods_FLMediaLibrary_Tests.framework */; };
+		FF95971A27DF450D0047E297 /* FLMediaPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = FF95971927DF450D0047E297 /* FLMediaPlayer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +68,8 @@
 		86171D9A5B24D7F5A46FD218 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		873B8AEA1B1F5CCA007FD442 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main.storyboard; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		D67F190A569761628069E30A /* FLMediaLibrary.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = FLMediaLibrary.podspec; path = ../FLMediaLibrary.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		FF95971827DF450D0047E297 /* FLMediaPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLMediaPlayer.h; sourceTree = "<group>"; };
+		FF95971927DF450D0047E297 /* FLMediaPlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FLMediaPlayer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +140,8 @@
 				873B8AEA1B1F5CCA007FD442 /* Main.storyboard */,
 				6003F5A5195388D20070C39A /* FLViewController.h */,
 				6003F5A6195388D20070C39A /* FLViewController.m */,
+				FF95971827DF450D0047E297 /* FLMediaPlayer.h */,
+				FF95971927DF450D0047E297 /* FLMediaPlayer.m */,
 				71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */,
 				6003F5A8195388D20070C39A /* Images.xcassets */,
 				6003F594195388D20070C39A /* Supporting Files */,
@@ -365,6 +370,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6003F59E195388D20070C39A /* FLAppDelegate.m in Sources */,
+				FF95971A27DF450D0047E297 /* FLMediaPlayer.m in Sources */,
 				6003F5A7195388D20070C39A /* FLViewController.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
 			);
