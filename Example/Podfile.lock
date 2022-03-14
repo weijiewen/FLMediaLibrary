@@ -1,0 +1,16 @@
+PODS:
+  - FLMediaLibrary (0.1.0)
+
+DEPENDENCIES:
+  - FLMediaLibrary (from `../`)
+
+EXTERNAL SOURCES:
+  FLMediaLibrary:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  FLMediaLibrary: 49418119072f5917a6d51b4710f0bc283e7bc77a
+
+PODFILE CHECKSUM: b26ac05a6f6fdb1778e8744be73f1bc66f077843
+
+COCOAPODS: 1.11.2

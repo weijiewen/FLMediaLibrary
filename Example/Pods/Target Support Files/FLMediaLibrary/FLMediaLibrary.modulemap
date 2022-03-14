@@ -1,0 +1,6 @@
+framework module FLMediaLibrary {
+  umbrella header "FLMediaLibrary-umbrella.h"
+
+  export *
+  module * { export * }
+}
