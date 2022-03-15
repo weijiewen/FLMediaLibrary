@@ -252,6 +252,9 @@
 				LastUpgradeCheck = 0720;
 				ORGANIZATIONNAME = weijiwen;
 				TargetAttributes = {
+					6003F589195388D20070C39A = {
+						DevelopmentTeam = V66DTARKY4;
+					};
 					6003F5AD195388D20070C39A = {
 						TestTargetID = 6003F589195388D20070C39A;
 					};
@@ -500,6 +503,7 @@
 			baseConfigurationReference = 844AA45E8E723D462EE0F1E7 /* Pods-FLMediaLibrary_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = V66DTARKY4;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "FLMediaLibrary/FLMediaLibrary-Prefix.pch";
 				INFOPLIST_FILE = "FLMediaLibrary/FLMediaLibrary-Info.plist";
@@ -516,6 +520,7 @@
 			baseConfigurationReference = 6A256B5424D9125CD422372F /* Pods-FLMediaLibrary_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = V66DTARKY4;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "FLMediaLibrary/FLMediaLibrary-Prefix.pch";
 				INFOPLIST_FILE = "FLMediaLibrary/FLMediaLibrary-Info.plist";
