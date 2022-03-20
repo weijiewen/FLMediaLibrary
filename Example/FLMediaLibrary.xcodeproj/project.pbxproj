@@ -38,6 +38,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1264CF1727E79A7C0088FF98 /* JYPlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JYPlayer.m; sourceTree = "<group>"; };
+		1264CF1827E79A7C0088FF98 /* JYFileHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JYFileHandle.h; sourceTree = "<group>"; };
+		1264CF1927E79A7C0088FF98 /* JYPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JYPlayer.h; sourceTree = "<group>"; };
+		1264CF1A27E79A7C0088FF98 /* JYFileHandle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JYFileHandle.m; sourceTree = "<group>"; };
+		1264CF1B27E79A7C0088FF98 /* JYImageBrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JYImageBrowser.h; sourceTree = "<group>"; };
+		1264CF1C27E79A7C0088FF98 /* JYImageBrowser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JYImageBrowser.m; sourceTree = "<group>"; };
 		2C023B902ECFE9844FF3643C /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		43A23ECA909BF8D3E3BA1493 /* Pods_FLMediaLibrary_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FLMediaLibrary_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F58A195388D20070C39A /* FLMediaLibrary_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FLMediaLibrary_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -98,6 +104,27 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1264CF1527E79A7C0088FF98 /* ImageBrowser */ = {
+			isa = PBXGroup;
+			children = (
+				1264CF1627E79A7C0088FF98 /* JYPlayer */,
+				1264CF1B27E79A7C0088FF98 /* JYImageBrowser.h */,
+				1264CF1C27E79A7C0088FF98 /* JYImageBrowser.m */,
+			);
+			path = ImageBrowser;
+			sourceTree = "<group>";
+		};
+		1264CF1627E79A7C0088FF98 /* JYPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				1264CF1827E79A7C0088FF98 /* JYFileHandle.h */,
+				1264CF1A27E79A7C0088FF98 /* JYFileHandle.m */,
+				1264CF1927E79A7C0088FF98 /* JYPlayer.h */,
+				1264CF1727E79A7C0088FF98 /* JYPlayer.m */,
+			);
+			path = JYPlayer;
+			sourceTree = "<group>";
+		};
 		6003F581195388D10070C39A = {
 			isa = PBXGroup;
 			children = (
@@ -143,6 +170,7 @@
 				FF95971827DF450D0047E297 /* FLMediaPlayer.h */,
 				FF95971927DF450D0047E297 /* FLMediaPlayer.m */,
 				71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */,
+				1264CF1527E79A7C0088FF98 /* ImageBrowser */,
 				6003F5A8195388D20070C39A /* Images.xcassets */,
 				6003F594195388D20070C39A /* Supporting Files */,
 			);

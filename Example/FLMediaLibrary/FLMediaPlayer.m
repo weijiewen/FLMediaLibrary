@@ -11,18 +11,27 @@
 #import "FLMediaPlayer.h"
 
 @interface FLMediaDownloadCache : NSObject
-@property (nonatomic, strong) dispatch_semaphore_t fileLock;
+@property (nonatomic, strong) dispatch_semaphore_t writeDataLock;
 @property (nonatomic, strong) NSURL *URL;
 + (NSMapTable *)cachesPool;
 @end
 
 @implementation FLMediaDownloadCache
 
++ (NSMapTable *)cachesPool {
+    static NSMapTable *table;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        table = [NSMapTable mapTableWithKeyOptions:NSMapTableCopyIn valueOptions:NSMapTableWeakMemory];
+    });
+    return table;
+}
+
 + (instancetype)cacheWithURL:(NSURL *)URL {
     FLMediaDownloadCache *cache = [FLMediaDownloadCache.cachesPool objectForKey:URL.absoluteString];
     if (!cache) {
         cache = FLMediaDownloadCache.alloc.init;
-        cache.fileLock = dispatch_semaphore_create(1);
+        cache.writeDataLock = dispatch_semaphore_create(1);
         cache.URL = URL;
         [FLMediaDownloadCache.cachesPool setObject:cache forKey:URL.absoluteString];
     }
@@ -68,98 +77,123 @@
     [[[NSJSONSerialization dataWithJSONObject:list options:NSJSONWritingFragmentsAllowed error:nil] base64EncodedDataWithOptions:0] writeToFile:listPath atomically:YES];
 }
 
-
-+ (NSMapTable *)cachesPool {
-    static NSMapTable *table;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        table = [NSMapTable mapTableWithKeyOptions:NSMapTableCopyIn valueOptions:NSMapTableWeakMemory];
-    });
-    return table;
-}
-
-- (void)dealloc {
-    while (dispatch_semaphore_signal(self.fileLock)) {}
-}
-
-- (void)cacheData:(NSData *)data start:(long)start {
-    NSURL *URL = self.URL;
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        dispatch_semaphore_wait(self.fileLock, DISPATCH_TIME_FOREVER);
-        NSMutableArray *cacheList = [FLMediaDownloadCache listWithURL:URL];
-        if (!cacheList.count) {
-            NSString *dataPath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, data.length)];
-            [data writeToFile:dataPath atomically:YES];
-            [cacheList addObject:NSStringFromRange(NSMakeRange(start, data.length))];
-            [FLMediaDownloadCache saveList:cacheList URL:URL];
-        }
-        else {
-            NSMutableData *mutableData = [NSMutableData dataWithData:data];
-            for (NSInteger index = 0; index < cacheList.count; index ++) {
-                NSRange range = NSRangeFromString(cacheList[index]);
-                if (start > range.location) {
-                    if (start < range.location + range.length) {
-                        if (start + mutableData.length <= range.location + range.length) {
-                            ///新数据被包含
-                            //新：    |-----|
-                            //旧：  |-----------|
-                            break;
-                        }
-                        else {
-                            ///新数据前部相交旧数据后部
-                            //新：      |--------|
-                            //旧：  |------|
-                        }
-                    }
-                }
-                if (start + mutableData.length < range.location) {
-                    ///新数据在前
-                    //新：  |-----|
-                    //旧：            |-----|
-                    NSString *dataPath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, mutableData.length)];
-                    [data writeToFile:dataPath atomically:YES];
-                    [cacheList insertObject:NSStringFromRange(NSMakeRange(start, mutableData.length)) atIndex:index];
-                    [FLMediaDownloadCache saveList:cacheList URL:URL];
-                    break;
+- (void)writeData:(NSMutableData *)data start:(long)start URL:(NSURL *)URL {
+    if ([data isKindOfClass:NSMutableData.class]) {
+        data = data.mutableCopy;
+    }
+    NSMutableArray *cacheList = [FLMediaDownloadCache listWithURL:URL];
+    NSInteger index = 0;
+    while (index < cacheList.count) {
+        NSRange range = NSRangeFromString(cacheList[index]);
+        if (start > range.location) {
+            if (start < range.location + range.length) {
+                if (start + data.length <= range.location + range.length) {
+                    ///新数据被包含
+                    //新：    |-----|
+                    //旧：  |-----------|
+                    return;
                 }
                 else {
-                    BOOL intersect = YES;
-                    while (start + mutableData.length >= range.location + range.length) {
-                        ///新数据包含旧数据
-                        //新：  |----------------|
-                        //旧：       |-------|
-                        NSString *indexDataPath = [FLMediaDownloadCache dataPathWithURL:URL range:range];
-                        [NSFileManager.defaultManager removeItemAtPath:indexDataPath error:nil];
-                        [cacheList removeObjectAtIndex:index];
-                        if (index < cacheList.count) {
-                            range = NSRangeFromString(cacheList[index]);
-                        }
-                        else {
-                            intersect = NO;
-                            break;
-                        }
-                    }
-                    if (intersect) {
-                        ///新数据相交旧数据前部
-                        //新：  |--------|
-                        //旧：       |-------|
-                        NSString *indexDataPath = [FLMediaDownloadCache dataPathWithURL:URL range:range];
-                        NSData *indexData = [NSData dataWithContentsOfFile:indexDataPath];
-                        [NSFileManager.defaultManager removeItemAtPath:indexDataPath error:nil];
-                        [mutableData replaceBytesInRange:NSMakeRange(range.location - start, range.length) withBytes:indexData.bytes];
-                        cacheList[index] = NSStringFromRange(NSMakeRange(start, mutableData.length));
+                    ///新数据前部相交旧数据后部
+                    //新：      |--------|
+                    //旧：  |------|
+                    NSString *indexDataPath = [FLMediaDownloadCache dataPathWithURL:URL range:range];
+                    NSMutableData *indexData = [NSMutableData dataWithContentsOfFile:indexDataPath];
+                    [NSFileManager.defaultManager removeItemAtPath:indexDataPath error:nil];
+                    [indexData replaceBytesInRange:NSMakeRange(start - range.location, data.length) withBytes:data.bytes];
+                    data = indexData;
+                    start = range.location;
+                    [cacheList removeObjectAtIndex:index];
+                    if (index < cacheList.count) {
+                        continue;
                     }
                     else {
-                        [cacheList addObject:NSStringFromRange(NSMakeRange(start, mutableData.length))];
+                        NSString *dataPath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, data.length)];
+                        [data writeToFile:dataPath atomically:YES];
+                        [cacheList addObject:NSStringFromRange(NSMakeRange(start, data.length))];
+                        [FLMediaDownloadCache saveList:cacheList URL:URL];
+                        return;
                     }
-                    NSString *savePath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, mutableData.length)];
-                    [mutableData writeToFile:savePath atomically:YES];
+                }
+            }
+            else {
+                ///新数据超出旧数据范围
+                //新：            |-----|
+                //旧：  |------|
+                if (cacheList[index] == cacheList.lastObject) {
+                    NSString *dataPath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, data.length)];
+                    [data writeToFile:dataPath atomically:YES];
+                    [cacheList addObject:NSStringFromRange(NSMakeRange(start, data.length))];
                     [FLMediaDownloadCache saveList:cacheList URL:URL];
-                    break;
+                    return;
+                }
+                else {
+                    continue;
                 }
             }
         }
-        dispatch_semaphore_signal(self.fileLock);
+        else {
+            if (start + data.length < range.location) {
+                ///新数据在前
+                //新：  |-----|
+                //旧：            |-----|
+                NSString *dataPath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, data.length)];
+                [data writeToFile:dataPath atomically:YES];
+                [cacheList insertObject:NSStringFromRange(NSMakeRange(start, data.length)) atIndex:index];
+                [FLMediaDownloadCache saveList:cacheList URL:URL];
+                return;
+            }
+            else {
+                BOOL intersect = YES;
+                while (start + data.length >= range.location + range.length) {
+                    ///新数据包含旧数据
+                    //新：  |----------------|
+                    //旧：       |-------|
+                    NSString *indexDataPath = [FLMediaDownloadCache dataPathWithURL:URL range:range];
+                    [NSFileManager.defaultManager removeItemAtPath:indexDataPath error:nil];
+                    [cacheList removeObjectAtIndex:index];
+                    if (index < cacheList.count) {
+                        range = NSRangeFromString(cacheList[index]);
+                    }
+                    else {
+                        intersect = NO;
+                        break;
+                    }
+                }
+                if (intersect) {
+                    ///新数据相交旧数据前部
+                    //新：  |--------|
+                    //旧：       |-------|
+                    NSString *indexDataPath = [FLMediaDownloadCache dataPathWithURL:URL range:range];
+                    NSData *indexData = [NSData dataWithContentsOfFile:indexDataPath];
+                    [NSFileManager.defaultManager removeItemAtPath:indexDataPath error:nil];
+                    [data replaceBytesInRange:NSMakeRange(range.location - start, range.length) withBytes:indexData.bytes];
+                    cacheList[index] = NSStringFromRange(NSMakeRange(start, data.length));
+                }
+                else {
+                    [cacheList addObject:NSStringFromRange(NSMakeRange(start, data.length))];
+                }
+                NSString *savePath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, data.length)];
+                [data writeToFile:savePath atomically:YES];
+                [FLMediaDownloadCache saveList:cacheList URL:URL];
+                return;
+            }
+        }
+        index += 1;
+    }
+    NSString *dataPath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, data.length)];
+    [data writeToFile:dataPath atomically:YES];
+    [cacheList addObject:NSStringFromRange(NSMakeRange(start, data.length))];
+    [FLMediaDownloadCache saveList:cacheList URL:URL];
+}
+
+- (void)cacheData:(NSData *)data start:(long)start {
+    __weak typeof(self) weak_self = self;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        __strong typeof(weak_self) strong_self = weak_self;
+        dispatch_semaphore_wait(strong_self.writeDataLock, DISPATCH_TIME_FOREVER);
+        [strong_self writeData:data.mutableCopy start:start URL:strong_self.URL];
+        dispatch_semaphore_signal(strong_self.writeDataLock);
     });
 }
 
