@@ -10,7 +10,160 @@
 #import <AVFoundation/AVFoundation.h>
 #import "FLMediaPlayer.h"
 
-static NSString *const kFLMediaPlayerScheme = @"TCKJPlay";
+@interface FLMediaDownloadCache : NSObject
+@property (nonatomic, strong) dispatch_semaphore_t fileLock;
+@property (nonatomic, strong) NSURL *URL;
++ (NSMapTable *)cachesPool;
+@end
+
+@implementation FLMediaDownloadCache
+
++ (instancetype)cacheWithURL:(NSURL *)URL {
+    FLMediaDownloadCache *cache = [FLMediaDownloadCache.cachesPool objectForKey:URL.absoluteString];
+    if (!cache) {
+        cache = FLMediaDownloadCache.alloc.init;
+        cache.fileLock = dispatch_semaphore_create(1);
+        cache.URL = URL;
+        [FLMediaDownloadCache.cachesPool setObject:cache forKey:URL.absoluteString];
+    }
+    return cache;
+}
+
++ (NSString *)directoryPathWithURL:(NSURL *)URL {
+    NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject stringByAppendingPathComponent:@"FLMediaPlayerVideo"];
+    NSString *base64String = [[URL.absoluteString dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];
+    path = [path stringByAppendingPathComponent:base64String];
+    BOOL isDirectory = NO;
+    BOOL exists = [NSFileManager.defaultManager fileExistsAtPath:path isDirectory:&isDirectory];
+    if (!exists || !isDirectory) {
+        [NSFileManager.defaultManager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:@{} error:nil];
+    }
+    return path;
+}
+
++ (NSString *)dataPathWithURL:(NSURL *)URL range:(NSRange)range {
+    long end = range.location + range.length - 1;
+    return [[self directoryPathWithURL:URL] stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld-%ld", (long)range.location, end]];
+}
+
++ (NSMutableArray *)listWithURL:(NSURL *)URL {
+    NSString *listPath = [[self directoryPathWithURL:URL] stringByAppendingPathComponent:@"caches"];
+    NSMutableArray *cacheList = NSMutableArray.array;
+    NSData *base64Data = [NSData dataWithContentsOfFile:listPath];
+    if (base64Data.length) {
+        NSData *data = [NSData.alloc initWithBase64EncodedData:base64Data options:0];
+        NSArray *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
+        if (json) {
+            cacheList = json.mutableCopy;
+        }
+    }
+    return cacheList;
+}
+
++ (void)saveList:(NSArray *)list URL:(NSURL *)URL {
+    NSString *listPath = [[self directoryPathWithURL:URL] stringByAppendingPathComponent:@"caches"];
+    if ([NSFileManager.defaultManager fileExistsAtPath:listPath]) {
+        [NSFileManager.defaultManager removeItemAtPath:listPath error:nil];
+    }
+    [[[NSJSONSerialization dataWithJSONObject:list options:NSJSONWritingFragmentsAllowed error:nil] base64EncodedDataWithOptions:0] writeToFile:listPath atomically:YES];
+}
+
+
++ (NSMapTable *)cachesPool {
+    static NSMapTable *table;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        table = [NSMapTable mapTableWithKeyOptions:NSMapTableCopyIn valueOptions:NSMapTableWeakMemory];
+    });
+    return table;
+}
+
+- (void)dealloc {
+    while (dispatch_semaphore_signal(self.fileLock)) {}
+}
+
+- (void)cacheData:(NSData *)data start:(long)start {
+    NSURL *URL = self.URL;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_semaphore_wait(self.fileLock, DISPATCH_TIME_FOREVER);
+        NSMutableArray *cacheList = [FLMediaDownloadCache listWithURL:URL];
+        if (!cacheList.count) {
+            NSString *dataPath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, data.length)];
+            [data writeToFile:dataPath atomically:YES];
+            [cacheList addObject:NSStringFromRange(NSMakeRange(start, data.length))];
+            [FLMediaDownloadCache saveList:cacheList URL:URL];
+        }
+        else {
+            NSMutableData *mutableData = [NSMutableData dataWithData:data];
+            for (NSInteger index = 0; index < cacheList.count; index ++) {
+                NSRange range = NSRangeFromString(cacheList[index]);
+                if (start > range.location) {
+                    if (start < range.location + range.length) {
+                        if (start + mutableData.length <= range.location + range.length) {
+                            ///新数据被包含
+                            //新：    |-----|
+                            //旧：  |-----------|
+                            break;
+                        }
+                        else {
+                            ///新数据前部相交旧数据后部
+                            //新：      |--------|
+                            //旧：  |------|
+                        }
+                    }
+                }
+                if (start + mutableData.length < range.location) {
+                    ///新数据在前
+                    //新：  |-----|
+                    //旧：            |-----|
+                    NSString *dataPath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, mutableData.length)];
+                    [data writeToFile:dataPath atomically:YES];
+                    [cacheList insertObject:NSStringFromRange(NSMakeRange(start, mutableData.length)) atIndex:index];
+                    [FLMediaDownloadCache saveList:cacheList URL:URL];
+                    break;
+                }
+                else {
+                    BOOL intersect = YES;
+                    while (start + mutableData.length >= range.location + range.length) {
+                        ///新数据包含旧数据
+                        //新：  |----------------|
+                        //旧：       |-------|
+                        NSString *indexDataPath = [FLMediaDownloadCache dataPathWithURL:URL range:range];
+                        [NSFileManager.defaultManager removeItemAtPath:indexDataPath error:nil];
+                        [cacheList removeObjectAtIndex:index];
+                        if (index < cacheList.count) {
+                            range = NSRangeFromString(cacheList[index]);
+                        }
+                        else {
+                            intersect = NO;
+                            break;
+                        }
+                    }
+                    if (intersect) {
+                        ///新数据相交旧数据前部
+                        //新：  |--------|
+                        //旧：       |-------|
+                        NSString *indexDataPath = [FLMediaDownloadCache dataPathWithURL:URL range:range];
+                        NSData *indexData = [NSData dataWithContentsOfFile:indexDataPath];
+                        [NSFileManager.defaultManager removeItemAtPath:indexDataPath error:nil];
+                        [mutableData replaceBytesInRange:NSMakeRange(range.location - start, range.length) withBytes:indexData.bytes];
+                        cacheList[index] = NSStringFromRange(NSMakeRange(start, mutableData.length));
+                    }
+                    else {
+                        [cacheList addObject:NSStringFromRange(NSMakeRange(start, mutableData.length))];
+                    }
+                    NSString *savePath = [FLMediaDownloadCache dataPathWithURL:URL range:NSMakeRange(start, mutableData.length)];
+                    [mutableData writeToFile:savePath atomically:YES];
+                    [FLMediaDownloadCache saveList:cacheList URL:URL];
+                    break;
+                }
+            }
+        }
+        dispatch_semaphore_signal(self.fileLock);
+    });
+}
+
+@end
 
 @interface NSURLSessionDataTask (FLMediaDownloader)
 @property (nonatomic, strong) AVAssetResourceLoadingRequest *fl_loadingRequest;
@@ -31,105 +184,7 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay";
 }
 @end
 
-
-@interface FLMediaDownloadCache : NSObject
-@property (nonatomic, strong) dispatch_semaphore_t fileLock;
-@property (nonatomic, strong) NSURL *URL;
-- (NSString *)directoryPath;
-- (NSString *)listPath;
-- (NSString *)dataPathWithStart:(long)start end:(long)end;
-- (NSMutableArray *)list;
-@end
-
-@implementation FLMediaDownloadCache
-
-- (void)dealloc {
-    while (dispatch_semaphore_signal(self.fileLock)) {}
-}
-
-+ (instancetype)cacheWithURL:(NSURL *)URL {
-    FLMediaDownloadCache *cache = FLMediaDownloadCache.alloc.init;
-    cache.fileLock = dispatch_semaphore_create(1);
-    cache.URL = URL;
-    return cache;
-}
-
-- (NSString *)directoryPath {
-    NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject stringByAppendingPathComponent:@"FLMediaPlayerVideo"];
-    NSString *base64String = [[self.URL.absoluteString dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];
-    path = [path stringByAppendingPathComponent:base64String];
-    BOOL isDirectory = NO;
-    BOOL exists = [NSFileManager.defaultManager fileExistsAtPath:path isDirectory:&isDirectory];
-    if (!exists || !isDirectory) {
-        [NSFileManager.defaultManager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:@{} error:nil];
-    }
-    return path;
-}
-
-- (NSString *)listPath {
-    return [self.directoryPath stringByAppendingPathComponent:@"caches"];
-}
-
-- (NSString *)dataPathWithStart:(long)start end:(long)end {
-    return [self.directoryPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld-%ld", start, end]];
-}
-
-- (NSMutableArray *)list {
-    NSMutableArray *cacheList = NSMutableArray.array;
-    NSString *base64String = [NSString stringWithContentsOfFile:self.listPath encoding:NSUTF8StringEncoding error:nil];
-    if (base64String.length) {
-        NSData *data = [NSData.alloc initWithBase64EncodedString:base64String options:0];
-        NSArray *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        if (json) {
-            cacheList = json.mutableCopy;
-        }
-    }
-    return cacheList;
-}
-
-// 1.
-//新：  |-----|
-//旧：     |-----|
-//
-//
-// 2.
-//新：     |-----|
-//旧：  |-----|
-//
-//
-// 3.
-//新：      |-----|
-//旧：  |-----|
-//
-//
-// 4.
-//新：       |----------|
-//旧：  |-----|  ...  |-----|
-
-- (void)cacheData:(NSData *)data start:(long)start {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        dispatch_semaphore_wait(self.fileLock, DISPATCH_TIME_FOREVER);
-        NSMutableData *mutableData = [NSMutableData dataWithData:data];
-        long end = start + mutableData.length - 1;
-        NSString *dataPath = [self dataPathWithStart:start end:end];
-        NSMutableArray *cacheList = self.list;
-        if (!cacheList.count) {
-            [mutableData writeToFile:dataPath atomically:YES];
-            [cacheList addObject:NSStringFromRange(NSMakeRange(start, mutableData.length))];
-            if ([NSFileManager.defaultManager fileExistsAtPath:self.listPath]) {
-                [NSFileManager.defaultManager removeItemAtPath:self.listPath error:nil];
-            }
-            [cacheList writeToFile:self.listPath atomically:YES];
-        }
-        else {
-            NSMutableArray *<>
-        }
-        dispatch_semaphore_signal(self.fileLock);
-    });
-}
-
-@end
-
+static NSString *const kFLMediaPlayerScheme = @"TCKJPlay";
 
 @interface FLMediaDownloader : NSObject <NSURLSessionDataDelegate>
 @property (nonatomic, weak) FLMediaPlayer *player;

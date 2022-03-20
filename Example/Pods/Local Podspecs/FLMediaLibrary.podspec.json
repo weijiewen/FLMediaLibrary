@@ -18,5 +18,6 @@
   "platforms": {
     "ios": "9.0"
   },
-  "source_files": "FLMediaLibrary/Classes/**/*"
+  "source_files": "FLMediaLibrary/Classes/**/*",
+  "frameworks": "AVFoundation"
 }
