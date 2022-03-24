@@ -19,39 +19,51 @@ NS_ASSUME_NONNULL_BEGIN
 /// 开始播放、或重新开始播放、或暂停后开始播放回调该方法
 - (void)playerPlaying:(FLMediaPlayer *)player;
 
-/// 调用pause时执行回调该方法
-- (void)playerPause:(FLMediaPlayer *)player;
-
 /// 播放结束，如果loop为YES 该方法不会回调
 - (void)playerFinish:(FLMediaPlayer *)player;
 
 /// 播放失败
 - (void)playerFailure:(FLMediaPlayer *)player error:(NSError *)error;
 
-/// 播放时间改变，播放中每秒调用一次
-- (void)playerTimeChange:(FLMediaPlayer *)player currentSeconds:(NSInteger)currentSeconds duration:(NSInteger)duration;
+/// 播放时间改变
+- (void)playerTimeChange:(FLMediaPlayer *)player currentSeconds:(NSTimeInterval)currentSeconds duration:(NSTimeInterval)duration;
+
+/// 缓冲进度改变
+- (void)playerCacheRangeChange:(FLMediaPlayer *)player cacheSeconds:(NSTimeInterval)cacheSeconds duration:(NSTimeInterval)duration;
 @end
 
 @protocol FLMediaPlayerDataSource <NSObject>
-@optional
+@required
+
+/// 自己处理下载返回YES，返回NO 使用内部NSURLSessionDataTask http下载
+/// @param player player description
+/// @param key 原传入的key
+- (BOOL)playerIsCustom:(FLMediaPlayer *)player
+                   key:(NSString *)key;
 
 /// 播放器需要请求视频数据
 /// @param player player description
-/// @param request request description
-/// @param response 收到返回的response后调用该block
-/// @param appendData 收到数据调用该block追加数据
-/// @param finish 本次请求结束
+/// @param identifier 请求标识符，取消请求使用
+/// @param key 原传入的key
+/// @param start 开始下标
+/// @param end 结束下标
+/// @param response 返回响应头
+/// @param appendData 填充数据
+/// @param completion 请求失败或成功
 - (void)playerWillRequest:(FLMediaPlayer *)player
-                  request:(NSURLRequest *)request
+               identifier:(NSString *)identifier
+                      key:(NSString *)key
+                    start:(long long)start
+                      end:(long long)end
                  response:(void(^)(NSURLResponse *response))response
                appendData:(void(^)(NSData *data))appendData
-                   finish:(dispatch_block_t)finish;
+               completion:(void(^)(NSError *error))completion;
 
 /// 播放器已取消请求
 /// @param player player description
 /// @param request request description
 - (void)playerCancelRequest:(FLMediaPlayer *)player
-                    request:(NSURLRequest *)request;
+                 identifier:(NSString *)identifier;
 @end
 
 @interface FLMediaPlayer : NSObject
@@ -66,6 +78,21 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) CMTime duration;
 
 + (instancetype)player;
+
+/// 本地filePath  http  传入阿里云oss objectKey前设置dataSource自定义下载数据
+/// @param key key description
+- (void)loadKey:(NSString *)key;
+
+/// 播放
+- (void)play;
+
+/// 暂停
+- (void)pause;
+
+/// 跳转
+/// @param time time description
+/// @param completion completion description
+- (void)seekTime:(CMTime)time completion:(void(^)(BOOL finished))completion;
 
 @end
 
