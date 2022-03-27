@@ -66,20 +66,38 @@ NS_ASSUME_NONNULL_BEGIN
                  identifier:(NSString *)identifier;
 @end
 
+typedef NS_ENUM(NSUInteger, FLMediaPlayContentMode) {
+    /// 保持宽高比最长边充满视图
+    FLMediaPlayContentModeAspectFit,
+    
+    /// 保持宽高比最短边充满视图
+    FLMediaPlayContentModeAspectFill,
+    
+    /// 按照视图尺寸拉伸
+    FLMediaPlayContentModeResize,
+};
+
+@interface FLMediaPlayView : UIView
+@property (nonatomic, assign) FLMediaPlayContentMode playMode;
+@end
+
 @interface FLMediaPlayer : NSObject
+
+@property (nonatomic, readonly) FLMediaPlayView *playView;
+
 @property (nonatomic, weak) id <FLMediaPlayerDelegate> delegate;
-/// 播放器下载代理，不设置该代理则使用NSURLSession http下载，   如视频资源在阿里云OSS私有空间时使用该代理
+/// 自定义播放器下载，不设置该代理则使用NSURLSession http下载，   如视频资源在阿里云OSS私有空间时使用该代理
 @property (nonatomic, weak) id <FLMediaPlayerDataSource> dataSource;
 /// 是否加载后自动开始播放，默认YES
 @property (nonatomic, assign) BOOL autoPlay;
 /// 是否循环播放，默认NO
 @property (nonatomic, assign) BOOL loop;
 /// 视频时长
-@property (nonatomic, assign) CMTime duration;
+@property (nonatomic, readonly) NSTimeInterval duration;
 
 + (instancetype)player;
 
-/// 本地filePath  http  传入阿里云oss objectKey前设置dataSource自定义下载数据
+/// 支持类型：本地filePath、http、第三方fileKey，如：阿里云oss objectKey，第三方key时，调用loadKey前设置dataSource自定义下载数据
 /// @param key key description
 - (void)loadKey:(NSString *)key;
 
@@ -92,7 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 跳转
 /// @param time time description
 /// @param completion completion description
-- (void)seekTime:(CMTime)time completion:(void(^)(BOOL finished))completion;
+- (void)seekToSeconds:(NSTimeInterval)seconds completion:(void(^)(BOOL finished))completion;
 
 @end
 

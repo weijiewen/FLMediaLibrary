@@ -64,6 +64,7 @@ static NSString * const JYCutsomURLScheme = @"JYPlayer";
             if (data && self.dataFileHandles[URL].header) {
                 [self fillRequest:loadingRequest header:self.dataFileHandles[URL].header];
                 [loadingRequest.dataRequest respondWithData:data];
+                
                 [loadingRequest finishLoading];
             }
             else {
