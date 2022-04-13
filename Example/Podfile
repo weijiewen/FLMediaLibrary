@@ -4,7 +4,7 @@ platform :ios, '11.0'
 
 target 'FLMediaLibrary_Example' do
   pod 'FLMediaLibrary', :path => '../'  
-
+  pod 'SDWebImage'
   target 'FLMediaLibrary_Tests' do
     inherit! :search_paths
 

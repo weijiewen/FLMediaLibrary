@@ -1,8 +1,16 @@
 PODS:
   - FLMediaLibrary (0.1.0)
+  - SDWebImage (5.12.5):
+    - SDWebImage/Core (= 5.12.5)
+  - SDWebImage/Core (5.12.5)
 
 DEPENDENCIES:
   - FLMediaLibrary (from `../`)
+  - SDWebImage
+
+SPEC REPOS:
+  trunk:
+    - SDWebImage
 
 EXTERNAL SOURCES:
   FLMediaLibrary:
@@ -10,7 +18,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FLMediaLibrary: f42f4f20195435e32fd9ea4ee75f4f17de6aafcb
+  SDWebImage: 0905f1b7760fc8ac4198cae0036600d67478751e
 
-PODFILE CHECKSUM: 7d679a8021f2d93960ddfcf10573f34612bca822
+PODFILE CHECKSUM: 1a39556d5c550ee1aea7c96823363b8a9d83c063
 
 COCOAPODS: 1.11.3

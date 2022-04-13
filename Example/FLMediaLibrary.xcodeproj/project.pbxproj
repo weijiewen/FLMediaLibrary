@@ -9,15 +9,19 @@
 /* Begin PBXBuildFile section */
 		10BF924D81B1E4125452BAB5 /* Pods_FLMediaLibrary_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6DC34D2050B7571B025046F1 /* Pods_FLMediaLibrary_Example.framework */; };
 		12767B5D27F1F91C004601BC /* FLMediaItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 12767B5C27F1F91C004601BC /* FLMediaItem.m */; };
+		12885A932805AF0500B0CA02 /* FLPlayerController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5A6195388D20070C39A /* FLPlayerController.m */; };
+		12885A962805B77300B0CA02 /* FLImageBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = 12885A952805B77300B0CA02 /* FLImageBrowser.m */; };
 		12C71B6627F49C7A00EE4AA1 /* FLMediaPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = FF95971927DF450D0047E297 /* FLMediaPlayer.m */; };
 		12C71B6927F4B89A00EE4AA1 /* FLTips.m in Sources */ = {isa = PBXBuildFile; fileRef = 12C71B6827F4B89A00EE4AA1 /* FLTips.m */; };
+		12C71B6C2805AA0400EE4AA1 /* FLProgressView.m in Sources */ = {isa = PBXBuildFile; fileRef = 12C71B6B2805AA0400EE4AA1 /* FLProgressView.m */; };
+		12C71B6F2805ADF700EE4AA1 /* FLImagesController.m in Sources */ = {isa = PBXBuildFile; fileRef = 12C71B6E2805ADF700EE4AA1 /* FLImagesController.m */; };
+		12C71B722805AE3400EE4AA1 /* FLViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 12C71B712805AE3400EE4AA1 /* FLViewController.m */; };
 		6003F58E195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58F195388D20070C39A /* CoreGraphics.framework */; };
 		6003F592195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
 		6003F598195388D20070C39A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6003F596195388D20070C39A /* InfoPlist.strings */; };
 		6003F59A195388D20070C39A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F599195388D20070C39A /* main.m */; };
 		6003F59E195388D20070C39A /* FLAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F59D195388D20070C39A /* FLAppDelegate.m */; };
-		6003F5A7195388D20070C39A /* FLViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5A6195388D20070C39A /* FLViewController.m */; };
 		6003F5A9195388D20070C39A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6003F5A8195388D20070C39A /* Images.xcassets */; };
 		6003F5B0195388D20070C39A /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F5AF195388D20070C39A /* XCTest.framework */; };
 		6003F5B1195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
@@ -48,8 +52,16 @@
 		1264CF1C27E79A7C0088FF98 /* JYImageBrowser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JYImageBrowser.m; sourceTree = "<group>"; };
 		12767B5B27F1F91C004601BC /* FLMediaItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLMediaItem.h; sourceTree = "<group>"; };
 		12767B5C27F1F91C004601BC /* FLMediaItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FLMediaItem.m; sourceTree = "<group>"; };
+		12885A942805B77300B0CA02 /* FLImageBrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLImageBrowser.h; sourceTree = "<group>"; };
+		12885A952805B77300B0CA02 /* FLImageBrowser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FLImageBrowser.m; sourceTree = "<group>"; };
 		12C71B6727F4B89900EE4AA1 /* FLTips.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLTips.h; sourceTree = "<group>"; };
 		12C71B6827F4B89A00EE4AA1 /* FLTips.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FLTips.m; sourceTree = "<group>"; };
+		12C71B6A2805AA0400EE4AA1 /* FLProgressView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLProgressView.h; sourceTree = "<group>"; };
+		12C71B6B2805AA0400EE4AA1 /* FLProgressView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FLProgressView.m; sourceTree = "<group>"; };
+		12C71B6D2805ADF700EE4AA1 /* FLImagesController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLImagesController.h; sourceTree = "<group>"; };
+		12C71B6E2805ADF700EE4AA1 /* FLImagesController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FLImagesController.m; sourceTree = "<group>"; };
+		12C71B702805AE3400EE4AA1 /* FLViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLViewController.h; sourceTree = "<group>"; };
+		12C71B712805AE3400EE4AA1 /* FLViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FLViewController.m; sourceTree = "<group>"; };
 		2C023B902ECFE9844FF3643C /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		43A23ECA909BF8D3E3BA1493 /* Pods_FLMediaLibrary_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FLMediaLibrary_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F58A195388D20070C39A /* FLMediaLibrary_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FLMediaLibrary_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -62,8 +74,8 @@
 		6003F59B195388D20070C39A /* FLMediaLibrary-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FLMediaLibrary-Prefix.pch"; sourceTree = "<group>"; };
 		6003F59C195388D20070C39A /* FLAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLAppDelegate.h; sourceTree = "<group>"; };
 		6003F59D195388D20070C39A /* FLAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FLAppDelegate.m; sourceTree = "<group>"; };
-		6003F5A5195388D20070C39A /* FLViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLViewController.h; sourceTree = "<group>"; };
-		6003F5A6195388D20070C39A /* FLViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FLViewController.m; sourceTree = "<group>"; };
+		6003F5A5195388D20070C39A /* FLPlayerController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLPlayerController.h; sourceTree = "<group>"; };
+		6003F5A6195388D20070C39A /* FLPlayerController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FLPlayerController.m; sourceTree = "<group>"; };
 		6003F5A8195388D20070C39A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		6003F5AE195388D20070C39A /* FLMediaLibrary_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FLMediaLibrary_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F5AF195388D20070C39A /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -171,12 +183,20 @@
 				6003F59C195388D20070C39A /* FLAppDelegate.h */,
 				6003F59D195388D20070C39A /* FLAppDelegate.m */,
 				873B8AEA1B1F5CCA007FD442 /* Main.storyboard */,
-				6003F5A5195388D20070C39A /* FLViewController.h */,
-				6003F5A6195388D20070C39A /* FLViewController.m */,
+				12C71B702805AE3400EE4AA1 /* FLViewController.h */,
+				12C71B712805AE3400EE4AA1 /* FLViewController.m */,
+				6003F5A5195388D20070C39A /* FLPlayerController.h */,
+				6003F5A6195388D20070C39A /* FLPlayerController.m */,
+				12C71B6D2805ADF700EE4AA1 /* FLImagesController.h */,
+				12C71B6E2805ADF700EE4AA1 /* FLImagesController.m */,
+				12C71B6A2805AA0400EE4AA1 /* FLProgressView.h */,
+				12C71B6B2805AA0400EE4AA1 /* FLProgressView.m */,
 				FF95971827DF450D0047E297 /* FLMediaPlayer.h */,
 				FF95971927DF450D0047E297 /* FLMediaPlayer.m */,
 				12767B5B27F1F91C004601BC /* FLMediaItem.h */,
 				12767B5C27F1F91C004601BC /* FLMediaItem.m */,
+				12885A942805B77300B0CA02 /* FLImageBrowser.h */,
+				12885A952805B77300B0CA02 /* FLImageBrowser.m */,
 				12C71B6727F4B89900EE4AA1 /* FLTips.h */,
 				12C71B6827F4B89A00EE4AA1 /* FLTips.m */,
 				71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */,
@@ -393,10 +413,12 @@
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FLMediaLibrary_Example/Pods-FLMediaLibrary_Example-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/FLMediaLibrary/FLMediaLibrary.framework",
+				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FLMediaLibrary.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -413,9 +435,13 @@
 				12C71B6627F49C7A00EE4AA1 /* FLMediaPlayer.m in Sources */,
 				6003F59E195388D20070C39A /* FLAppDelegate.m in Sources */,
 				12767B5D27F1F91C004601BC /* FLMediaItem.m in Sources */,
-				6003F5A7195388D20070C39A /* FLViewController.m in Sources */,
+				12C71B6F2805ADF700EE4AA1 /* FLImagesController.m in Sources */,
+				12885A962805B77300B0CA02 /* FLImageBrowser.m in Sources */,
+				12885A932805AF0500B0CA02 /* FLPlayerController.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
 				12C71B6927F4B89A00EE4AA1 /* FLTips.m in Sources */,
+				12C71B6C2805AA0400EE4AA1 /* FLProgressView.m in Sources */,
+				12C71B722805AE3400EE4AA1 /* FLViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

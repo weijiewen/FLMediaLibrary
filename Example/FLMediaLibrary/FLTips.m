@@ -289,7 +289,7 @@
     
     [NSLayoutConstraint activateConstraints:@[
         [NSLayoutConstraint constraintWithItem:tipView attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self.tipWindow attribute:NSLayoutAttributeCenterX multiplier:1 constant:0],
-        [NSLayoutConstraint constraintWithItem:tipView attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:self.tipWindow attribute:NSLayoutAttributeBottom multiplier:1 constant:-100 - self.tipWindow.safeAreaInsets.bottom],
+        [NSLayoutConstraint constraintWithItem:tipView attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:self.tipWindow attribute:NSLayoutAttributeBottom multiplier:1 constant:-100],
         [NSLayoutConstraint constraintWithItem:tipView attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationLessThanOrEqual toItem:self.tipWindow attribute:NSLayoutAttributeWidth multiplier:0.9 constant:0],
         [NSLayoutConstraint constraintWithItem:tipLabel attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:tipView attribute:NSLayoutAttributeLeft multiplier:1 constant:10],
         [NSLayoutConstraint constraintWithItem:tipLabel attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:tipView attribute:NSLayoutAttributeTop multiplier:1 constant:10],

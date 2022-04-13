@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class FLMediaPlayer;
 @protocol FLMediaPlayerDelegate <NSObject>
 @optional
+
 /// 需要加载loading
 - (void)playerStartLoading:(FLMediaPlayer *)player;
 
@@ -51,6 +52,8 @@ typedef NS_ENUM(NSUInteger, FLMediaPlayContentMode) {
 @interface FLMediaPlayer : NSObject
 
 @property (nonatomic, readonly) FLMediaPlayView *playView;
+/// 是否已暂停
+@property (nonatomic, readonly) BOOL isPause;
 /// 是否加载后自动开始播放，默认YES
 @property (nonatomic, assign) BOOL autoPlay;
 /// 是否循环播放，默认NO
