@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "FLMediaItem.h"
+#import "FLImageBrowserDelegate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -49,7 +50,7 @@ typedef NS_ENUM(NSUInteger, FLMediaPlayContentMode) {
 @property (nonatomic, assign) FLMediaPlayContentMode playMode;
 @end
 
-@interface FLMediaPlayer : NSObject
+@interface FLMediaPlayer : NSObject <FLImageBrowserPlayer>
 
 @property (nonatomic, readonly) FLMediaPlayView *playView;
 /// 是否已暂停

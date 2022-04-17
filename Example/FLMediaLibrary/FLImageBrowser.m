@@ -15,7 +15,9 @@
 - (void)browserCell:(FLImageBrowserCell *)cell didLongPressWithImage:(UIImage *)image;
 - (void)browserCell:(FLImageBrowserCell *)cell dissmissProgress:(CGFloat)progress;
 - (void)browserCellDissmiss;
+- (void)browserRemoveFromWindow;
 @end
+
 
 @interface FLImageBrowserCell : UICollectionViewCell <UIScrollViewDelegate, UIGestureRecognizerDelegate>
 @property (nonatomic, strong) id <FLImageBrowserPlayer> player;
@@ -24,6 +26,7 @@
 @property (nonatomic, strong) UIImageView *imageView;
 @property (nonatomic, weak) id <FLImageBrowserCellDelegate> delegate;
 @property (nonatomic, assign) CGFloat panStartZoomScale;
+@property (nonatomic, strong) UIPanGestureRecognizer *pan;
 @end
 @implementation FLImageBrowserCell
 
@@ -49,13 +52,14 @@
         self.imageView = [UIImageView.alloc initWithFrame:CGRectMake(1, 0, self.scrollView.bounds.size.width - 2, self.scrollView.bounds.size.height)];
         self.imageView.contentMode = UIViewContentModeScaleAspectFit;
         self.imageView.clipsToBounds = NO;
+        self.imageView.userInteractionEnabled = NO;
         [self.imageView addObserver:self forKeyPath:@"image" options:NSKeyValueObservingOptionNew context:nil];
         [self.scrollView addSubview:self.imageView];
         
-        UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(action_pan:)];
-        pan.delegate = self;
+        self.pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(action_pan:)];
+        self.pan.delegate = self;
         self.imageView.userInteractionEnabled = YES;
-        [self.imageView addGestureRecognizer:pan];
+        [self.imageView addGestureRecognizer:self.pan];
         
         UITapGestureRecognizer *twoTouchTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(action_twoTap)];
         twoTouchTap.numberOfTapsRequired = 2;
@@ -153,14 +157,17 @@
         return YES;
     }
     UIPanGestureRecognizer *pan = (UIPanGestureRecognizer *)gestureRecognizer;
-    CGPoint point = [pan translationInView:pan.view];
-    BOOL isBottom = (self.scrollView.contentOffset.y <= 0 && point.y > 0);
-    BOOL isTop = (self.scrollView.contentOffset.y >= self.scrollView.contentSize.height - self.scrollView.bounds.size.height && point.y < 0);
-    if (isBottom || isTop) {
-        self.scrollView.scrollEnabled = NO;
-        return YES;
+    if (pan == self.pan) {
+        CGPoint point = [pan translationInView:pan.view];
+        BOOL isBottom = (self.scrollView.contentOffset.y <= 0 && point.y > 0);
+        BOOL isTop = (self.scrollView.contentOffset.y >= self.scrollView.contentSize.height - self.scrollView.bounds.size.height && point.y < 0);
+        if (isBottom || isTop) {
+            self.scrollView.scrollEnabled = NO;
+            return YES;
+        }
+        return NO;
     }
-    return NO;
+    return YES;
 }
 
 - (void)action_pan:(UIPanGestureRecognizer *)pan {
@@ -186,9 +193,7 @@
             [UIView animateWithDuration:0.3 animations:^{
                 [self.delegate browserCell:self dissmissProgress:1];
             } completion:^(BOOL finished) {
-                UIViewController *controller = (UIViewController *)self.delegate;
-                [controller.view removeFromSuperview];
-                [controller removeFromParentViewController];
+                [self.delegate browserRemoveFromWindow];
             }];
         }
         else {
@@ -210,6 +215,11 @@
 
 - (void)reloadCell {
     [self.scrollView setZoomScale:1 animated:YES];
+    for (UIView *subView in self.contentView.subviews) {
+        if (subView != self.scrollView) {
+            [subView removeFromSuperview];
+        }
+    }
 }
 
 @end
@@ -319,7 +329,8 @@
     self.window = [UIWindow.alloc initWithFrame:sourceImageView ? screenFame : CGRectMake(0, screenFame.size.height, screenFame.size.width, screenFame.size.height)];
     self.window.backgroundColor = UIColor.blackColor;
     self.window.rootViewController = FLImageBrowserController.alloc.init;
-    self.window.hidden = nil;
+    self.window.hidden = NO;
+    self.window.alpha = 0;
     UIView *view = self.window.rootViewController.view;
     if (!sourceImageView) {
         UIView *navigationView = [UIView.alloc initWithFrame:CGRectMake(0, 0, self.window.bounds.size.width, UIApplication.sharedApplication.statusBarFrame.size.height + 44)];
@@ -373,9 +384,10 @@
                     CGFloat sourceScale = sourceImageView.bounds.size.width / sourceImageView.bounds.size.height;
                     CGFloat imageScale = sourceImageView.image.size.width / sourceImageView.image.size.height;
                     if (sourceImageView.contentMode == UIViewContentModeScaleAspectFill) {
-                        if (sourceScale > imageScale) {
-                            maskSize.width = sourceImageView.bounds.size.height / (imageScale * sourceImageView.bounds.size.height) * size.width;
+                        if (sourceScale < imageScale) {
                             fromWidth = imageScale * sourceImageView.bounds.size.height;
+                            maskSize.width = sourceImageView.bounds.size.width / fromWidth * size.width;
+                            maskSize.height = sourceImageView.image.size.height / sourceImageView.image.size.width * size.width;
                         }
                     }
                     else if (sourceImageView.contentMode == UIViewContentModeScaleAspectFit) {
@@ -387,10 +399,10 @@
                 }
                 else {
                     !self.requestImage ?: self.requestImage(cell.imageView, self.currentIndex, sourceImageView.image);
-                    cell.player = self.willShow ? self.willShow(cell, cell.imageView, self.currentIndex) : nil;
+                    cell.player = self.willShow ? self.willShow(cell.contentView, cell.imageView, self.currentIndex) : nil;
                 }
                 CGFloat scale = fromWidth / self.window.bounds.size.width;
-                
+                self.window.center = CGPointMake(CGRectGetMidX(sourceOnWindowRect), CGRectGetMidY(sourceOnWindowRect));
                 self.window.maskView = [[UIView alloc] initWithFrame:CGRectMake(size.width / 2 - maskSize.width / 2,
                                                                                 size.height / 2 - maskSize.height / 2,
                                                                                 maskSize.width,
@@ -398,7 +410,7 @@
                 self.window.maskView.backgroundColor = UIColor.blackColor;
                 self.window.maskView.clipsToBounds = YES;
                 self.window.transform = CGAffineTransformMakeScale(scale, scale);
-                self.window.center = CGPointMake(CGRectGetMidX(sourceOnWindowRect), CGRectGetMidY(sourceOnWindowRect));
+                self.window.alpha = 1;
                 [UIView animateWithDuration:0.3 animations:^{
                     self.window.transform = CGAffineTransformIdentity;
                     self.window.center = CGPointMake(self.window.bounds.size.width / 2, self.window.bounds.size.height / 2);
@@ -407,14 +419,15 @@
                 } completion:^(BOOL finished) {
                     if (hasImage) {
                         !self.requestImage ?: self.requestImage(cell.imageView, self.currentIndex, sourceImageView.image);
-                        cell.player = self.willShow ? self.willShow(cell, cell.imageView, self.currentIndex) : nil;
+                        cell.player = self.willShow ? self.willShow(cell.contentView, cell.imageView, self.currentIndex) : nil;
                     }
                     self.window.userInteractionEnabled = YES;
                 }];
             }
             else {
+                self.window.alpha = 1;
                 !self.requestImage ?: self.requestImage(cell.imageView, self.currentIndex, sourceImageView.image);
-                cell.player = self.willShow ? self.willShow(cell, cell.imageView, self.currentIndex) : nil;
+                cell.player = self.willShow ? self.willShow(cell.contentView, cell.imageView, self.currentIndex) : nil;
                 [UIView animateWithDuration:0.3 animations:^{
                     self.window.frame = UIScreen.mainScreen.bounds;
                 } completion:^(BOOL finished) {
@@ -435,11 +448,13 @@
         }
         if (index != self.currentIndex) {
             FLImageBrowserCell *cell = (FLImageBrowserCell *)[self.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:self.currentIndex inSection:0]];
+            [cell.player pause];
+            cell.player = nil;
             [cell reloadCell];
             self.currentIndex = index;
             if (self.willShow) {
                 cell = (FLImageBrowserCell *)[self.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:self.currentIndex inSection:0]];
-                cell.player = self.willShow ? self.willShow(cell, cell.imageView, self.currentIndex) : nil;
+                cell.player = self.willShow ? self.willShow(cell.contentView, cell.imageView, self.currentIndex) : nil;
             }
         }
     }
@@ -450,7 +465,7 @@
     cell.delegate = self;
     [cell reloadCell];
     UIImageView *sourceImageView = self.sourceImageView ? self.sourceImageView(indexPath.item) : nil;
-    !self.requestImage ?: self.requestImage(cell.imageView, self.currentIndex, sourceImageView.image);
+    !self.requestImage ?: self.requestImage(cell.imageView, indexPath.item, sourceImageView.image);
     return cell;
 }
 
@@ -463,33 +478,42 @@
 }
 
 - (void)browserCell:(FLImageBrowserCell *)cell dissmissProgress:(CGFloat)progress {
-    NSLog(@"%f", progress);
     UIImageView *sourceImageView = self.sourceImageView ? self.sourceImageView([self.collectionView indexPathForCell:cell].item) : nil;
     if (sourceImageView && self.sourceWindow) {
         CGRect sourceOnWindowRect = [sourceImageView convertRect:sourceImageView.bounds toView:self.sourceWindow];
-        CGFloat scaleWidth = sourceImageView.bounds.size.width;
-        CGFloat scaleHeight = sourceImageView.bounds.size.height;
-        CGFloat sourceScale = sourceImageView.bounds.size.width / sourceImageView.bounds.size.height;
+        CGSize size = self.window.bounds.size;
+        CGFloat toWidth = sourceImageView.bounds.size.width;
+        CGSize maskSize = CGSizeMake(size.width, sourceImageView.bounds.size.height / toWidth * size.width);
         if (sourceImageView.image) {
-            CGFloat imageScale = sourceImageView.image.size.width / sourceImageView.image.size.height;
+            UIImage *image = !CGSizeEqualToSize(sourceImageView.image.size, cell.imageView.image.size) && cell.imageView.image ? cell.imageView.image : sourceImageView.image;
+            CGFloat imageScale = image.size.width / image.size.height;
+            CGFloat sourceScale = sourceImageView.bounds.size.width / sourceImageView.bounds.size.height;
             if (sourceImageView.contentMode == UIViewContentModeScaleAspectFill) {
-                
+                if (sourceScale < imageScale) {
+                    toWidth = image.size.width / image.size.height * sourceImageView.bounds.size.height;
+                    maskSize.width = sourceImageView.bounds.size.width / toWidth * size.width;
+                    maskSize.height = image.size.height / image.size.width * size.width;
+                }
             }
             else if (sourceImageView.contentMode == UIViewContentModeScaleAspectFit) {
-                
-            }
-            if ((sourceImageView.contentMode == UIViewContentModeScaleAspectFill && sourceScale > imageScale) ||
-                (sourceImageView.contentMode == UIViewContentModeScaleAspectFit && sourceScale < imageScale)) {
-                scaleWidth = imageScale * sourceImageView.bounds.size.height;
-                scaleHeight = sourceImageView.bounds.size.height;
+                if (sourceScale > imageScale) {
+                    toWidth = image.size.width / image.size.height * sourceImageView.bounds.size.height;
+                }
+                maskSize.height = image.size.height / image.size.width * size.width;
             }
         }
-        CGFloat scale = scaleWidth / self.window.bounds.size.width;
+        CGFloat scale = toWidth / size.width;
+        scale = (1 - scale) * (1 - progress) + scale;
         CGPoint center = CGPointMake(CGRectGetMidX(sourceOnWindowRect), CGRectGetMidY(sourceOnWindowRect));
         center.x = (self.window.bounds.size.width / 2 - center.x) * (1 - progress) + center.x;
         center.y = (self.window.bounds.size.height / 2 - center.y) * (1 - progress) + center.y;
+        CGRect maskFrame = CGRectZero;
+        maskFrame.origin.x = progress * (size.width / 2 - maskSize.width / 2);
+        maskFrame.origin.y = progress * (size.height / 2 - maskSize.height / 2);
+        maskFrame.size.width = size.width - (size.width - maskSize.width) * progress;
+        maskFrame.size.height = size.height - (size.height - maskSize.height) * progress;
         cell.scrollView.zoomScale = (cell.panStartZoomScale - 1) * (1 - progress) + 1;
-        self.window.maskView.frame = CGRectMake(0, self.window.bounds.size.height / 2 - scaleHeight / 2, self.window.maskView.bounds.size.width, scaleHeight / scaleWidth * self.window.maskView.bounds.size.width);
+        self.window.maskView.frame = maskFrame;
         self.window.transform = CGAffineTransformMakeScale(scale, scale);
         self.window.center = center;
     }
@@ -504,18 +528,21 @@
     [self action_back];
 }
 
+- (void)browserRemoveFromWindow {
+    self.requestImage = nil;
+    self.sourceImageView = nil;
+    self.willShow = nil;
+    self.longPress = nil;
+    self.dismiss = nil;
+    [UIApplication.sharedApplication.fl_imageBrowsers removeObject:self];
+}
 
 - (void)action_back {
     !self.dismiss ?: self.dismiss();
     [UIView animateWithDuration:0.3 animations:^{
         [self browserCell:(FLImageBrowserCell *)[self.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:self.currentIndex inSection:0]] dissmissProgress:1];
     } completion:^(BOOL finished) {
-        self.requestImage = nil;
-        self.sourceImageView = nil;
-        self.willShow = nil;
-        self.longPress = nil;
-        self.dismiss = nil;
-        [UIApplication.sharedApplication.fl_imageBrowsers removeObject:self];
+        [self browserRemoveFromWindow];
     }];
 }
 

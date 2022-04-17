@@ -22,16 +22,17 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
 + (NSString *)directoryPath;
 + (instancetype)cacheWithURL:(NSURL *)URL;
 - (void)saveResponse:(NSURLResponse *)response;
-- (void)cacheData:(NSData *)data start:(long)start;
-- (void)dataWithStart:(long)start length:(long)length completion:(void(^)(NSURLResponse * _Nullable response, NSData * _Nullable data))completion;
+- (void)cacheData:(NSData *)data start:(NSUInteger)start;
+- (void)dataWithStart:(NSUInteger)start length:(NSUInteger)length completion:(void(^)(NSURLResponse * _Nullable response, NSData * _Nullable data))completion;
+- (void)deleteCache;
 @end
 
 @interface FLMediaTask : NSObject
 @property (nonatomic, readonly) id <FLMediaPlayerCancel> dataTask;
 + (instancetype)taskWithDataSource:(id <FLMediaPlayerDataSource>)dataSource
                               path:(NSString *)path
-                             start:(long long)start
-                               end:(long long)end
+                             start:(NSUInteger)start
+                               end:(NSUInteger)end
                        didResponse:(void(^)(NSURLResponse *response))didResponse
                         appendData:(void(^)(NSData *data))appendData
                         completion:(void(^)(NSError *error))completion;
@@ -80,7 +81,6 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
     [asset.resourceLoader setDelegate:session queue:session.queue];
     FLMediaItem *item = [FLMediaItem playerItemWithAsset:asset];
     item.session = session;
-    NSLog(@"%@ init", item);
     return item;
 }
 @end
@@ -128,7 +128,7 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
     if (![response isKindOfClass:NSHTTPURLResponse.class]) {
         response = [NSHTTPURLResponse.alloc initWithURL:loadingRequest.request.URL statusCode:206 HTTPVersion:nil headerFields:nil];
     }
-    unsigned long long contentLength = response.expectedContentLength;
+    NSUInteger contentLength = response.expectedContentLength;
     NSString *rangeValue = response.allHeaderFields[@"Content-Range"];
     if (rangeValue) {
         NSArray *rangeItems = [rangeValue componentsSeparatedByString:@"/"];
@@ -144,12 +144,12 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
 
 - (void)requetsDataWithPath:(NSString *)path loadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest times:(NSInteger)times {
     FLMediaDataCache *cache = [FLMediaDataCache cacheWithURL:loadingRequest.request.URL];
-    long long location = (long long)loadingRequest.dataRequest.currentOffset;
-    long long length = (long long)loadingRequest.dataRequest.requestedLength;
-    long long end = location + length - 1;
+    NSUInteger location = loadingRequest.dataRequest.currentOffset;
+    NSUInteger length = loadingRequest.dataRequest.requestedLength;
+    NSUInteger end = location + length - 1;
     __weak typeof(self) weak_self = self;
 //    __weak typeof(cache) weak_cache = cache;
-    [cache dataWithStart:(long)location length:(long)length completion:^(NSURLResponse * _Nullable response, NSData * _Nullable data) {
+    [cache dataWithStart:(NSUInteger)location length:(NSUInteger)length completion:^(NSURLResponse * _Nullable response, NSData * _Nullable data) {
 //        __strong typeof(weak_cache) strong_cache = weak_cache;
         if (response && data) {
             [FLMediaSession fillRequest:loadingRequest response:(NSHTTPURLResponse *)response];
@@ -167,7 +167,7 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
                 [cache saveResponse:response];
                 [FLMediaSession fillRequest:loadingRequest response:(NSHTTPURLResponse *)response];
             } appendData:^(NSData *data) {
-                [cache cacheData:data start:(long)loadingRequest.dataRequest.currentOffset];
+                [cache cacheData:data start:(NSUInteger)loadingRequest.dataRequest.currentOffset];
                 [loadingRequest.dataRequest respondWithData:data];
             } completion:^(NSError *error) {
                 if (error) {
@@ -187,7 +187,6 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
 }
 
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
-    NSLog(@"%@ init", loadingRequest);
     NSString *path = [FLMediaItem pathFromURL:loadingRequest.request.URL];
     if (!path) {
         return NO;
@@ -249,8 +248,8 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
 
 + (instancetype)taskWithDataSource:(id <FLMediaPlayerDataSource>)dataSource
                               path:(NSString *)path
-                             start:(long long)start
-                               end:(long long)end
+                             start:(NSUInteger)start
+                               end:(NSUInteger)end
                        didResponse:(void(^)(NSURLResponse *response))didResponse
                         appendData:(void(^)(NSData *data))appendData
                         completion:(void(^)(NSError *error))completion {
@@ -266,7 +265,7 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
             task.completion = completion;
             task.session = [NSURLSession sessionWithConfiguration:NSURLSessionConfiguration.defaultSessionConfiguration delegate:[FLMediaTaskDelegate delegateWithTask:task] delegateQueue:nil];
             NSMutableURLRequest *mutableRequest = [NSMutableURLRequest requestWithURL:URLObject];
-            NSString *range = [NSString stringWithFormat:@"bytes=%lld-%lld", start, end];
+            NSString *range = [NSString stringWithFormat:@"bytes=%@-%@", [NSNumber numberWithUnsignedLongLong:start], [NSNumber numberWithUnsignedLongLong:end]];
             [mutableRequest setValue:range forHTTPHeaderField:@"Range"];
             NSURLSessionDataTask *dataTask = [task.session dataTaskWithRequest:mutableRequest];
             task.dataTask = (id <FLMediaPlayerCancel>)dataTask;
@@ -331,8 +330,8 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
 }
 
 + (NSString *)dataPathWithURL:(NSURL *)URL range:(NSRange)range {
-    long end = range.location + range.length - 1;
-    return [[self directoryPathWithURL:URL] stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld-%ld", (long)range.location, end]];
+    NSUInteger end = range.location + range.length - 1;
+    return [[self directoryPathWithURL:URL] stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld-%ld", (NSUInteger)range.location, end]];
 }
 
 + (NSMutableArray *)listWithURL:(NSURL *)URL {
@@ -372,7 +371,7 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
     return _response;
 }
 
-- (void)writeData:(NSMutableData *)data start:(long)start URL:(NSURL *)URL {
+- (void)writeData:(NSMutableData *)data start:(NSUInteger)start URL:(NSURL *)URL {
     if (![data isKindOfClass:NSMutableData.class]) {
         data = data.mutableCopy;
     }
@@ -380,7 +379,7 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
     for (NSInteger index = 0; index < cacheList.count; index ++ ) {
         NSRange range = NSRangeFromString(cacheList[index]);
         if (start > range.location) {
-            if (start < range.location + range.length) {
+            if (start <= range.location + range.length) {
                 if (start + data.length <= range.location + range.length) {
                     ///新数据被包含
                     //新：    |-----|
@@ -394,7 +393,12 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
                     NSString *indexDataPath = [FLMediaDataCache dataPathWithURL:URL range:range];
                     NSMutableData *indexData = [NSMutableData dataWithContentsOfFile:indexDataPath];
                     [NSFileManager.defaultManager removeItemAtPath:indexDataPath error:nil];
-                    [indexData replaceBytesInRange:NSMakeRange(start - range.location, data.length) withBytes:data.bytes];
+                    if (start == range.location + range.length) {
+                        [indexData appendData:data];
+                    }
+                    else {
+                        [indexData replaceBytesInRange:NSMakeRange(start - range.location, data.length) withBytes:data.bytes];
+                    }
                     data = indexData;
                     start = range.location;
                     [cacheList removeObjectAtIndex:index];
@@ -484,17 +488,17 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
     self.response = response;
 }
 
-- (void)cacheData:(NSData *)data start:(long)start {
-    __weak typeof(self) weak_self = self;
+- (void)cacheData:(NSData *)data start:(NSUInteger)start {
+    dispatch_semaphore_t lock = self.dataLock;
+    NSURL *URL = self.URL;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        __strong typeof(weak_self) strong_self = weak_self;
-        dispatch_semaphore_wait(strong_self.dataLock, DISPATCH_TIME_FOREVER);
-        [strong_self writeData:data.mutableCopy start:start URL:strong_self.URL];
-        dispatch_semaphore_signal(strong_self.dataLock);
+        dispatch_semaphore_wait(lock, DISPATCH_TIME_FOREVER);
+        [self writeData:data.mutableCopy start:start URL:URL];
+        dispatch_semaphore_signal(lock);
     });
 }
 
-- (void)dataWithStart:(long)start length:(long)length completion:(void(^)(NSURLResponse * _Nullable response, NSData * _Nullable data))completion {
+- (void)dataWithStart:(NSUInteger)start length:(NSUInteger)length completion:(void(^)(NSURLResponse * _Nullable response, NSData * _Nullable data))completion {
     if (self.response) {
         __weak typeof(self) weak_self = self;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -508,8 +512,8 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
                 if (range.location <= start && range.location + range.length - 1 > start) {
                     NSString *path = [FLMediaDataCache dataPathWithURL:strong_self.URL range:range];
                     data = [NSData dataWithContentsOfFile:path];
-                    long long subdataStart = start - range.location;
-                    long long subdataLength = data.length - subdataStart > length ? length : data.length - subdataStart;
+                    NSUInteger subdataStart = start - range.location;
+                    NSUInteger subdataLength = data.length - subdataStart > length ? length : data.length - subdataStart;
                     data = [data subdataWithRange:NSMakeRange(subdataStart, subdataLength)];
                     response = strong_self.response;
                     break;
@@ -524,6 +528,11 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
     else {
         !completion ?: completion(nil, nil);
     }
+}
+
+- (void)deleteCache {
+    NSString *path = [FLMediaDataCache directoryPathWithURL:self.URL];
+    [NSFileManager.defaultManager removeItemAtPath:path error:nil];
 }
 
 @end

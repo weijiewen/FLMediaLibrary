@@ -9,9 +9,11 @@
 #import <UIImageView+WebCache.h>
 #import "FLImagesController.h"
 #import "FLImageBrowser.h"
+#import "FLMediaPlayer.h"
 
 @interface FLImagesController ()
 @property (nonatomic, copy) NSArray *images;
+@property (nonatomic, copy) NSArray *datas;
 @property (nonatomic, copy) NSArray <UIImageView *> *imageViews;
 @end
 
@@ -49,6 +51,17 @@
         @"https://img.alicdn.com/i4/3862285568/O1CN01Rtr7qU1r0C2IqNrnt_!!0-item_pic.jpg_q50s50.jpg",
         @"https://gw.alicdn.com/i3/2696514443/O1CN01ekgjio1igwPNl2UpB_!!2696514443.jpg_300x300Q75.jpg_.webp"
     ];
+    self.datas = @[
+        @"http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4",
+        @"http://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4",
+        @"http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4",
+        @"http://vfx.mtime.cn/Video/2019/03/19/mp4/190319212559089721.mp4",
+        @"http://vfx.mtime.cn/Video/2019/03/18/mp4/190318231014076505.mp4",
+        @"http://vfx.mtime.cn/Video/2019/03/18/mp4/190318214226685784.mp4",
+        @"http://vfx.mtime.cn/Video/2019/03/19/mp4/190319104618910544.mp4",
+        @"http://vfx.mtime.cn/Video/2019/03/19/mp4/190319125415785691.mp4",
+        @"http://vfx.mtime.cn/Video/2019/03/17/mp4/190317150237409904.mp4",
+    ];
     for (NSInteger i = 0; i < 9; i ++) {
         UIImageView *imageView = [UIImageView.alloc initWithFrame:CGRectMake(startPoint.x + i % 3 * (imageSize.width + 15), startPoint.y + i / 3 * (imageSize.height + 10), imageSize.width, imageSize.height)];
         imageView.backgroundColor = UIColor.yellowColor;
@@ -75,6 +88,10 @@
     } sourceImageView:^UIImageView * _Nullable(NSInteger index) {
         return self.imageViews[index];
     } willShow:^id<FLImageBrowserPlayer> _Nullable(UIView * _Nonnull contentView, UIImageView * _Nonnull imageView, NSInteger index) {
+        FLMediaPlayer *player = [FLMediaPlayer playerItem:[FLMediaItem mediaItemWithPath:self.datas[index]]];
+        player.playView.frame = contentView.bounds;
+        [contentView addSubview:player.playView];
+        return player;
         return nil;
     } longPress:^(NSInteger index, UIImage * _Nonnull image) {
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];

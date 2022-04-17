@@ -7,15 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "FLImageBrowserDelegate.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-@protocol FLImageBrowserPlayer <NSObject>
-@required
-- (void)play;
-- (void)pause;
-- (BOOL)isPause;
-@end
 
 @interface FLImageBrowser : NSObject
 

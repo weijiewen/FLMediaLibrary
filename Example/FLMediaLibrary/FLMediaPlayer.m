@@ -11,62 +11,6 @@
 @interface FLMediaPlayView ()
 @property (nonatomic, strong) AVPlayerLayer *playerLayer;
 @end
-@implementation FLMediaPlayView
-
-- (instancetype)initWithFrame:(CGRect)frame
-{
-    self = [super initWithFrame:frame];
-    if (self) {
-        self.clipsToBounds = YES;
-    }
-    return self;
-}
-
-- (void)setClipsToBounds:(BOOL)clipsToBounds {
-    [super setClipsToBounds:YES];
-}
-
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    self.playerLayer.frame = self.bounds;
-}
-
-- (void)setPlayerLayer:(AVPlayerLayer *)playerLayer {
-    if (_playerLayer.superlayer == self.layer) {
-        [_playerLayer removeFromSuperlayer];
-    }
-    _playerLayer = playerLayer;
-    [self.layer addSublayer:playerLayer];
-    playerLayer.frame = self.bounds;
-    switch (self.playMode) {
-        case FLMediaPlayContentModeAspectFit:
-            playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
-            break;
-        case FLMediaPlayContentModeAspectFill:
-            playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
-            break;
-        case FLMediaPlayContentModeResize:
-            playerLayer.videoGravity = AVLayerVideoGravityResize;
-            break;
-    }
-}
-
-- (void)setPlayMode:(FLMediaPlayContentMode)playMode {
-    _playMode = playMode;
-    switch (playMode) {
-        case FLMediaPlayContentModeAspectFit:
-            self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
-            break;
-        case FLMediaPlayContentModeAspectFill:
-            self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
-            break;
-        case FLMediaPlayContentModeResize:
-            self.playerLayer.videoGravity = AVLayerVideoGravityResize;
-            break;
-    }
-}
-
-@end
 
 #pragma mark --------------------------------- FLMediaPlayer ---------------------------------
 
@@ -196,6 +140,7 @@
         switch (self.item.status) {
             case AVPlayerItemStatusReadyToPlay: {
                 if (self.autoPlay) {
+                    self.playView.backgroundColor = UIColor.blackColor;
                     [self play];
                 }
             }
@@ -204,14 +149,12 @@
                 NSError *error;
                 if (self.item.error) {
                     error = self.item.error;
-                    NSLog(@"播放失败 %@", self.item.error);
                 }
                 if (self.player.error) {
                     error = self.player.error;
-                    NSLog(@"播放失败 %@", self.player.error);
                 }
                 if ([self.delegate respondsToSelector:@selector(playerFailure:error:)]) {
-                    [self.delegate playerFailure:self error:self.item.error];
+                    [self.delegate playerFailure:self error:error];
                 }
             }
                 break;
@@ -242,8 +185,10 @@
 }
 
 - (void)pause {
-    self.isPause = YES;
-    [self.player pause];
+    if (!self.isLoading) {
+        self.isPause = YES;
+        [self.player pause];
+    }
 }
 
 - (void)seekToSeconds:(NSTimeInterval)seconds completion:(void (^)(BOOL))completion {
@@ -253,3 +198,77 @@
 }
 
 @end
+
+#pragma mark --------------------------------- FLMediaPlayView ---------------------------------
+
+@implementation FLMediaPlayView
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.userInteractionEnabled = NO;
+        self.clipsToBounds = YES;
+        [super setBackgroundColor:[UIColor colorWithWhite:0 alpha:0.5]];
+        UIActivityIndicatorView *loading = [UIActivityIndicatorView.alloc initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+        [loading startAnimating];
+        [self addSubview:loading];
+    }
+    return self;
+}
+
+- (void)setBackgroundColor:(UIColor *)backgroundColor {
+    [super setBackgroundColor:backgroundColor];
+    [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+}
+
+- (void)setClipsToBounds:(BOOL)clipsToBounds {
+    [super setClipsToBounds:YES];
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    self.playerLayer.frame = self.bounds;
+    for (UIView *view in self.subviews) {
+        view.frame = self.bounds;
+    }
+}
+
+- (void)setPlayerLayer:(AVPlayerLayer *)playerLayer {
+    if (_playerLayer.superlayer == self.layer) {
+        [_playerLayer removeFromSuperlayer];
+    }
+    _playerLayer = playerLayer;
+    [self.layer addSublayer:playerLayer];
+    playerLayer.frame = self.bounds;
+    switch (self.playMode) {
+        case FLMediaPlayContentModeAspectFit:
+            playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+            break;
+        case FLMediaPlayContentModeAspectFill:
+            playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+            break;
+        case FLMediaPlayContentModeResize:
+            playerLayer.videoGravity = AVLayerVideoGravityResize;
+            break;
+    }
+}
+
+- (void)setPlayMode:(FLMediaPlayContentMode)playMode {
+    _playMode = playMode;
+    switch (playMode) {
+        case FLMediaPlayContentModeAspectFit:
+            self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+            break;
+        case FLMediaPlayContentModeAspectFill:
+            self.playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+            break;
+        case FLMediaPlayContentModeResize:
+            self.playerLayer.videoGravity = AVLayerVideoGravityResize;
+            break;
+    }
+}
+
+@end
+
+
