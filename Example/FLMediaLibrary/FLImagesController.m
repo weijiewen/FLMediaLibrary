@@ -82,7 +82,7 @@
 }
 
 - (void)action_tap:(UITapGestureRecognizer *)sender {
-    NSInteger index = [self.imageViews indexOfObject:sender.view];
+    NSInteger index = [self.imageViews indexOfObject:(UIImageView *)sender.view];
     [FLImageBrowser showWithCount:self.imageViews.count startIndex:index requestImage:^(UIImageView * _Nonnull imageView, NSInteger index, UIImage * _Nullable placeholder) {
         [imageView sd_setImageWithURL:[NSURL URLWithString:self.images[index]]];
     } sourceImageView:^UIImageView * _Nullable(NSInteger index) {

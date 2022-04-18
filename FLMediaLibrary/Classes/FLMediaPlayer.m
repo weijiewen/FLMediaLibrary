@@ -77,7 +77,9 @@
     self.item = item;
     self.player = [AVPlayer playerWithPlayerItem:self.item];
     self.playView.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
-    self.player.automaticallyWaitsToMinimizeStalling = NO;
+    if (@available(iOS 10.0, *)) {
+        self.player.automaticallyWaitsToMinimizeStalling = NO;
+    }
     __weak typeof(self) weak_self = self;
     self.isLoading = YES;
     if ([self.delegate respondsToSelector:@selector(playerStartLoading:)]) {

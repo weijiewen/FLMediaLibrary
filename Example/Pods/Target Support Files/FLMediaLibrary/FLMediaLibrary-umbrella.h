@@ -10,6 +10,10 @@
 #endif
 #endif
 
+#import "FLImageBrowser.h"
+#import "FLImageBrowserDelegate.h"
+#import "FLMediaItem.h"
+#import "FLMediaPlayer.h"
 
 FOUNDATION_EXPORT double FLMediaLibraryVersionNumber;
 FOUNDATION_EXPORT const unsigned char FLMediaLibraryVersionString[];

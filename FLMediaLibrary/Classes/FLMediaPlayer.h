@@ -73,7 +73,7 @@ typedef NS_ENUM(NSUInteger, FLMediaPlayContentMode) {
 - (void)pause;
 
 /// 跳转
-/// @param time time description
+/// @param seconds seconds description
 /// @param completion completion description
 - (void)seekToSeconds:(NSTimeInterval)seconds completion:(void(^)(BOOL finished))completion;
 

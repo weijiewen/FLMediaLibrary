@@ -26,7 +26,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param path 原传入的path
 /// @param start 开始下标
 /// @param end 结束下标
-/// @param response 返回响应头
 /// @param appendData 填充数据
 /// @param completion 请求失败或成功
 - (id <FLMediaPlayerCancel>)mediaDataRequestPath:(NSString *)path
