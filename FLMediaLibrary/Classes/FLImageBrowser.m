@@ -273,6 +273,19 @@
 
 + (void)showWithCount:(NSInteger)count
            startIndex:(NSInteger)startIndex
+         requestImage:(void(^)(UIImageView *imageView, NSInteger index, UIImage * _Nullable placeholder))requestImage {
+    [self showWithCount:count startIndex:startIndex requestImage:requestImage sourceImageView:nil];
+}
+
++ (void)showWithCount:(NSInteger)count
+           startIndex:(NSInteger)startIndex
+         requestImage:(void(^)(UIImageView *imageView, NSInteger index, UIImage * _Nullable placeholder))requestImage
+      sourceImageView:(nullable UIImageView * _Nullable (^)(NSInteger index))sourceImageView {
+    [self showWithCount:count startIndex:startIndex requestImage:requestImage sourceImageView:sourceImageView didDismiss:nil];
+}
+
++ (void)showWithCount:(NSInteger)count
+           startIndex:(NSInteger)startIndex
          requestImage:(void(^)(UIImageView *imageView, NSInteger index, UIImage * _Nullable placeholder))requestImage
            didDismiss:(nullable dispatch_block_t)didDismiss {
     [self showWithCount:count startIndex:startIndex requestImage:requestImage sourceImageView:nil didDismiss:didDismiss];
@@ -333,6 +346,14 @@
     self.window.rootViewController = FLImageBrowserController.alloc.init;
     self.window.hidden = NO;
     self.window.alpha = 0;
+    if (@available(iOS 13.0, *)) {
+        for (UIWindowScene *scene in UIApplication.sharedApplication.connectedScenes) {
+            if ([scene isKindOfClass:UIWindowScene.class] && scene.activationState == UISceneActivationStateForegroundActive) {
+                self.window.windowScene = scene;
+                break;
+            }
+        }
+    }
     UIView *view = self.window.rootViewController.view;
     if (!sourceImageView) {
         UIView *navigationView = [UIView.alloc initWithFrame:CGRectMake(0, 0, self.window.bounds.size.width, UIApplication.sharedApplication.statusBarFrame.size.height + 44)];

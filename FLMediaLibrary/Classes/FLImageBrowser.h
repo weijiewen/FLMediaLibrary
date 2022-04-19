@@ -15,6 +15,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)showWithCount:(NSInteger)count
            startIndex:(NSInteger)startIndex
+         requestImage:(void(^)(UIImageView *imageView, NSInteger index, UIImage * _Nullable placeholder))requestImage;
+
++ (void)showWithCount:(NSInteger)count
+           startIndex:(NSInteger)startIndex
+         requestImage:(void(^)(UIImageView *imageView, NSInteger index, UIImage * _Nullable placeholder))requestImage
+      sourceImageView:(nullable UIImageView * _Nullable (^)(NSInteger index))sourceImageView;
+
++ (void)showWithCount:(NSInteger)count
+           startIndex:(NSInteger)startIndex
          requestImage:(void(^)(UIImageView *imageView, NSInteger index, UIImage * _Nullable placeholder))requestImage
            didDismiss:(nullable dispatch_block_t)didDismiss;
 
