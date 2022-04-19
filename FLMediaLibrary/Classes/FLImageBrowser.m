@@ -355,21 +355,7 @@
         }
     }
     UIView *view = self.window.rootViewController.view;
-    if (!sourceImageView) {
-        UIView *navigationView = [UIView.alloc initWithFrame:CGRectMake(0, 0, self.window.bounds.size.width, UIApplication.sharedApplication.statusBarFrame.size.height + 44)];
-        navigationView.backgroundColor = [UIColor colorWithWhite:0.1 alpha:1];
-        [self.window addSubview:navigationView];
-        
-        UIButton *backButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        backButton.frame = CGRectMake(5, navigationView.bounds.size.height - 44, 44, 44);
-        [backButton addTarget:self action:@selector(action_back) forControlEvents:UIControlEventTouchUpInside];
-        [navigationView addSubview:backButton];
-        
-        view.frame = CGRectMake(0, navigationView.bounds.size.height, self.window.bounds.size.width, self.window.bounds.size.height - navigationView.bounds.size.height);
-    }
-    else {
-        view.frame = self.window.bounds;
-    }
+    view.frame = self.window.bounds;
     
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
     layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;

@@ -88,10 +88,10 @@
     } sourceImageView:^UIImageView * _Nullable(NSInteger index) {
         return self.imageViews[index];
     } willShow:^id<FLImageBrowserPlayer> _Nullable(UIView * _Nonnull contentView, UIImageView * _Nonnull imageView, NSInteger index) {
-        FLMediaPlayer *player = [FLMediaPlayer playerItem:[FLMediaItem mediaItemWithPath:self.datas[index]]];
-        player.playView.frame = contentView.bounds;
-        [contentView addSubview:player.playView];
-        return player;
+//        FLMediaPlayer *player = [FLMediaPlayer playerItem:[FLMediaItem mediaItemWithPath:self.datas[index]]];
+//        player.playView.frame = contentView.bounds;
+//        [contentView addSubview:player.playView];
+//        return player;
         return nil;
     } longPress:^(NSInteger index, UIImage * _Nonnull image) {
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
