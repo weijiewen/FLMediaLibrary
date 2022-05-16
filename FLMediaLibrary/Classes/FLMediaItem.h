@@ -38,9 +38,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 @interface FLMediaItem : AVPlayerItem
+@property (nonatomic, readonly) NSString *originPath;
 + (instancetype)mediaItemWithPath:(NSString *)path;
 + (instancetype)mediaItemWithPath:(NSString *)path dataSource:(nullable id<FLMediaPlayerDataSource>)dataSource;
 + (NSString *)directoryPath;
+- (void)deleteCache;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -10,6 +10,9 @@
 
 @interface FLMediaPlayView ()
 @property (nonatomic, strong) AVPlayerLayer *playerLayer;
+@property (nonatomic, strong) UIActivityIndicatorView *loading;
+- (void)startLoading;
+- (void)stopLoading;
 @end
 
 #pragma mark --------------------------------- FLMediaPlayer ---------------------------------
@@ -23,9 +26,9 @@
 @property (nonatomic, strong) AVPlayerItem *item;
 @property (nonatomic, strong) AVPlayer *player;
 @property (nonatomic, strong) AVPlayerLayer *playerLayer;
-@property (nonatomic, strong) id timeObserver;
 @property (nonatomic, strong) NSDate *stopDate;
 @property (nonatomic, assign) NSTimeInterval stopTimeInterval;
+@property (nonatomic, strong) dispatch_source_t playerTimer;
 @end
 
 @implementation FLMediaPlayer
@@ -34,8 +37,9 @@
     [self.playView removeFromSuperview];
     [self.item removeObserver:self forKeyPath:@"status"];
     [self.item removeObserver:self forKeyPath:@"loadedTimeRanges"];
-    if (self.timeObserver) {
-        [self.player removeTimeObserver:self.timeObserver];
+    if (self.playerTimer) {
+        dispatch_cancel(self.playerTimer);
+        self.playerTimer = nil;
     }
 }
 
@@ -60,6 +64,21 @@
     return self;
 }
 
+- (void)reloadPlayer {
+    if (!self.isLoading) {
+        self.isLoading = YES;
+        if ([self.delegate respondsToSelector:@selector(playerStartLoading:)]) {
+            [self.delegate playerStartLoading:self];
+        }
+        else {
+            [self.playView startLoading];
+        }
+    }
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self loadItem:self.item.copy];
+    });
+}
+
 - (NSTimeInterval)duration {
     if (self.item) {
         return CMTimeGetSeconds(self.item.duration);
@@ -69,8 +88,9 @@
 
 - (void)loadItem:(AVPlayerItem *)item
 {
-    if (self.timeObserver && self.player) {
-        [self.player removeTimeObserver:self.timeObserver];
+    if (self.playerTimer) {
+        dispatch_cancel(self.playerTimer);
+        self.playerTimer = nil;
     }
     [self.item removeObserver:self forKeyPath:@"status"];
     [self.item removeObserver:self forKeyPath:@"loadedTimeRanges"];
@@ -81,16 +101,26 @@
         self.player.automaticallyWaitsToMinimizeStalling = NO;
     }
     __weak typeof(self) weak_self = self;
-    self.isLoading = YES;
-    if ([self.delegate respondsToSelector:@selector(playerStartLoading:)]) {
-        [self.delegate playerStartLoading:self];
+    if (!self.isLoading) {
+        self.isLoading = YES;
+        if ([self.delegate respondsToSelector:@selector(playerStartLoading:)]) {
+            [self.delegate playerStartLoading:self];
+        }
+        else {
+            [self.playView startLoading];
+        }
     }
-    self.timeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 2) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
+    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+    dispatch_source_set_timer(timer, dispatch_time(DISPATCH_TIME_NOW, 0 * NSEC_PER_SEC), 0.5 * NSEC_PER_SEC, 0 * NSEC_PER_SEC);
+    dispatch_source_set_event_handler(timer, ^{
         if (weak_self.isPause) {
             if (weak_self.isLoading) {
                 weak_self.isLoading = NO;
                 if ([weak_self.delegate respondsToSelector:@selector(playerStopLoading:)]) {
                     [weak_self.delegate playerStopLoading:weak_self];
+                }
+                else {
+                    [weak_self.playView stopLoading];
                 }
             }
         }
@@ -108,13 +138,17 @@
                     [weak_self.delegate playerFinish:weak_self];
                 }
             }
-            else if (seconds == weak_self.stopTimeInterval &&
-                weak_self.stopDate &&
-                NSDate.date.timeIntervalSince1970 - weak_self.stopDate.timeIntervalSince1970 > 1.f) {
-                if (!weak_self.isLoading) {
+            else if (seconds == weak_self.stopTimeInterval && weak_self.stopDate) {
+                if (!weak_self.player.error &&
+                    !weak_self.item.error &&
+                    !weak_self.isLoading &&
+                    NSDate.date.timeIntervalSince1970 - weak_self.stopDate.timeIntervalSince1970 > 0.5) {
                     weak_self.isLoading = YES;
                     if ([weak_self.delegate respondsToSelector:@selector(playerStartLoading:)]) {
                         [weak_self.delegate playerStartLoading:weak_self];
+                    }
+                    else {
+                        [weak_self.playView startLoading];
                     }
                 }
             }
@@ -124,6 +158,9 @@
                     if ([weak_self.delegate respondsToSelector:@selector(playerStopLoading:)]) {
                         [weak_self.delegate playerStopLoading:weak_self];
                     }
+                    else {
+                        [weak_self.playView stopLoading];
+                    }
                 }
                 weak_self.stopTimeInterval = seconds;
                 weak_self.stopDate = NSDate.date;
@@ -132,7 +169,9 @@
                 }
             }
         }
-    }];
+    });
+    self.playerTimer = timer;
+    dispatch_resume(timer);
     [self.item addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
     [self.item addObserver:self forKeyPath:@"loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
 }
@@ -155,7 +194,12 @@
                 if (self.player.error) {
                     error = self.player.error;
                 }
-                if ([self.delegate respondsToSelector:@selector(playerFailure:error:)]) {
+                if ([self.item isKindOfClass:FLMediaItem.class]) {
+                    FLMediaItem *item = (FLMediaItem *)self.item;
+                    [self loadItem:[AVPlayerItem playerItemWithURL:[NSURL URLWithString:item.originPath]]];
+                    [item deleteCache];
+                }
+                else if ([self.delegate respondsToSelector:@selector(playerFailure:error:)]) {
                     [self.delegate playerFailure:self error:error];
                 }
             }
@@ -212,11 +256,19 @@
         self.userInteractionEnabled = NO;
         self.clipsToBounds = YES;
         [super setBackgroundColor:[UIColor colorWithWhite:0 alpha:0.5]];
-        UIActivityIndicatorView *loading = [UIActivityIndicatorView.alloc initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-        [loading startAnimating];
-        [self addSubview:loading];
+        self.loading = [UIActivityIndicatorView.alloc initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
     }
     return self;
+}
+
+- (void)startLoading {
+    [self addSubview:self.loading];
+    [self.loading startAnimating];
+}
+
+- (void)stopLoading {
+    [self.loading stopAnimating];
+    [self.loading removeFromSuperview];
 }
 
 - (void)setBackgroundColor:(UIColor *)backgroundColor {
@@ -230,6 +282,7 @@
 
 - (void)layoutSubviews {
     [super layoutSubviews];
+    self.loading.frame = self.bounds;
     self.playerLayer.frame = self.bounds;
     for (UIView *view in self.subviews) {
         view.frame = self.bounds;

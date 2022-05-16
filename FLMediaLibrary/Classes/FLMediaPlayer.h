@@ -66,6 +66,9 @@ typedef NS_ENUM(NSUInteger, FLMediaPlayContentMode) {
 
 + (instancetype)playerItem:(FLMediaItem *)item delegate:(nullable id <FLMediaPlayerDelegate>)delegate;
 
+/// 重新加载
+- (void)reloadPlayer;
+
 /// 播放
 - (void)play;
 

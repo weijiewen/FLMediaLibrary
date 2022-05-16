@@ -46,6 +46,7 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
 #pragma mark --------------------------------- FLMediaItem ---------------------------------
 
 @interface FLMediaItem () <AVAssetResourceLoaderDelegate>
+@property (nonatomic, copy) NSString *originPath;
 @property (nonatomic, weak) id <FLMediaPlayerDataSource> dataSource;
 @property (nonatomic, strong) FLMediaSession *session;
 @end
@@ -80,9 +81,30 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
     AVURLAsset *asset = [AVURLAsset assetWithURL:URL];
     [asset.resourceLoader setDelegate:session queue:session.queue];
     FLMediaItem *item = [FLMediaItem playerItemWithAsset:asset];
+    item.dataSource = dataSource;
+    item.originPath = path;
     item.session = session;
     return item;
 }
+
+- (void)deleteCache {
+    NSURL *URL = [FLMediaItem URLFromPath:self.originPath];
+    FLMediaDataCache *cache = [FLMediaDataCache cacheWithURL:URL];
+    [cache deleteCache];
+}
+
+- (id)copy {
+    NSURL *URL = [FLMediaItem URLFromPath:self.originPath];
+    FLMediaSession *session = FLMediaSession.alloc.init;
+    AVURLAsset *asset = [AVURLAsset assetWithURL:URL];
+    [asset.resourceLoader setDelegate:session queue:session.queue];
+    FLMediaItem *item = [FLMediaItem playerItemWithAsset:asset];
+    item.dataSource = self.dataSource;
+    item.originPath = self.originPath;
+    item.session = self.session;
+    return item;
+}
+
 @end
 
 #pragma mark --------------------------------- AVAssetResourceLoadingRequest (FLMediaTaks) ---------------------------------
@@ -137,7 +159,8 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
         }
     }
     CFStringRef mimeContentType = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, (__bridge CFStringRef)(response.MIMEType), NULL);
-    loadingRequest.contentInformationRequest.contentType = (__bridge NSString * _Nullable)(mimeContentType);
+    NSString *contentType = (__bridge NSString * _Nullable)(mimeContentType);
+    loadingRequest.contentInformationRequest.contentType = contentType;
     loadingRequest.contentInformationRequest.contentLength = contentLength;
     loadingRequest.contentInformationRequest.byteRangeAccessSupported = YES;
 }
@@ -451,7 +474,9 @@ static NSString *const kFLMediaPlayerScheme = @"TCKJPlay://";
                     [NSFileManager.defaultManager removeItemAtPath:indexDataPath error:nil];
                     [cacheList removeObjectAtIndex:index];
                     if (index < cacheList.count) {
-                        range = NSRangeFromString(cacheList[index]);
+                        [FLMediaDataCache saveList:cacheList URL:URL];
+                        [self writeData:data start:start URL:URL];
+                        return;
                     }
                     else {
                         intersect = NO;
