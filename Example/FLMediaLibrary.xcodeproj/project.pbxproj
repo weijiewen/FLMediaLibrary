@@ -292,7 +292,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = FL;
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 1330;
 				ORGANIZATIONNAME = weijiwen;
 				TargetAttributes = {
 					6003F589195388D20070C39A = {
@@ -305,10 +305,9 @@
 			};
 			buildConfigurationList = 6003F585195388D10070C39A /* Build configuration list for PBXProject "FLMediaLibrary" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
 				Base,
 			);

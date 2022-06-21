@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
                                             end:(long long)end
                                     didResponse:(void(^)(NSURLResponse *response))didResponse
                                      appendData:(void(^)(NSData *data))appendData
-                                     completion:(void(^)(NSError *error))completion;
+                                     completion:(void(^)(NSError *error, BOOL isCancel))completion;
 @end
 
 
