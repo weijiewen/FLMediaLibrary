@@ -243,6 +243,14 @@
     [self.player seekToTime:CMTimeMake(seconds, 1) completionHandler:completion];
 }
 
+- (void)muted:(BOOL)muted {
+    [self.player setMuted:muted];
+}
+
+- (void)volume:(CGFloat)volume {
+    [self.player setVolume:volume];
+}
+
 @end
 
 #pragma mark --------------------------------- FLMediaPlayView ---------------------------------

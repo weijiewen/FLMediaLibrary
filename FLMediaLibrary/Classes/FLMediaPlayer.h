@@ -80,6 +80,14 @@ typedef NS_ENUM(NSUInteger, FLMediaPlayContentMode) {
 /// @param completion completion description
 - (void)seekToSeconds:(NSTimeInterval)seconds completion:(void(^)(BOOL finished))completion;
 
+/// 静音
+/// @param muted muted description
+- (void)muted:(BOOL)muted;
+
+/// 音量
+/// @param volume volume description
+- (void)volume:(CGFloat)volume;
+
 @end
 
 NS_ASSUME_NONNULL_END
