@@ -93,14 +93,14 @@
 //        [contentView addSubview:player.playView];
 //        return player;
         return nil;
-    } longPress:^(NSInteger index, UIImage * _Nonnull image) {
+    } longPress:^(NSInteger index, UIImage * _Nonnull image, UIViewController * _Nonnull browserController) {
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
         [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
         [alert addAction:[UIAlertAction actionWithTitle:@"保存" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             
         }]];
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self presentViewController:alert animated:YES completion:nil];
+            [browserController presentViewController:alert animated:YES completion:nil];
         });
     } didDismiss:^{
         

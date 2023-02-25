@@ -51,7 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
          requestImage:(void(^)(UIImageView *imageView, NSInteger index, UIImage * _Nullable placeholder))requestImage
       sourceImageView:(nullable UIImageView * _Nullable (^)(NSInteger index))sourceImageView
              willShow:(nullable id <FLImageBrowserPlayer> _Nullable (^)(UIView *contentView, UIImageView *imageView, NSInteger index))willShow
-            longPress:(nullable void(^)(NSInteger index, UIImage *image))longPress
+            longPress:(nullable void(^)(NSInteger index, UIImage *image, UIViewController *browserController))longPress
            didDismiss:(nullable dispatch_block_t)didDismiss;
 
 @end

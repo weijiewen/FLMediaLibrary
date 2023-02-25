@@ -260,7 +260,7 @@
 @property (nonatomic, copy) void(^requestImage)(UIImageView *imageView, NSInteger index, UIImage * _Nullable placeholder);
 @property (nonatomic, copy) UIImageView * _Nullable (^sourceImageView)(NSInteger index);
 @property (nonatomic, copy) id <FLImageBrowserPlayer> _Nullable (^willShow)(UIView *contentView, UIImageView *imageView, NSInteger index);
-@property (nonatomic, copy) void(^longPress)(NSInteger index, UIImage *image);
+@property (nonatomic, copy) void(^longPress)(NSInteger index, UIImage *image, UIViewController *browserController);
 @property (nonatomic, copy) dispatch_block_t dismiss;
 
 @property (nonatomic, weak) UIWindow *sourceWindow;
@@ -321,7 +321,7 @@
          requestImage:(void(^)(UIImageView *imageView, NSInteger index, UIImage * _Nullable placeholder))requestImage
       sourceImageView:(nullable UIImageView * _Nullable (^)(NSInteger index))sourceImageView
              willShow:(nullable id <FLImageBrowserPlayer> _Nullable (^)(UIView *contentView, UIImageView *imageView, NSInteger index))willShow
-            longPress:(nullable void(^)(NSInteger index, UIImage *image))longPress
+            longPress:(nullable void(^)(NSInteger index, UIImage *image, UIViewController *browserController))longPress
            didDismiss:(nullable dispatch_block_t)didDismiss {
     FLImageBrowser *imageBrowser = FLImageBrowser.alloc.init;
     imageBrowser.imageCount = count;
@@ -483,7 +483,7 @@
 }
 
 - (void)browserCell:(FLImageBrowserCell *)cell didLongPressWithImage:(UIImage *)image {
-    !self.longPress ?: self.longPress([self.collectionView indexPathForCell:cell].item, image);
+    !self.longPress ?: self.longPress([self.collectionView indexPathForCell:cell].item, image, self.window.rootViewController);
 }
 
 - (void)browserCell:(FLImageBrowserCell *)cell dissmissProgress:(CGFloat)progress {
